@@ -1,0 +1,14 @@
+{
+    "melspec": {
+        "mp3_dir": "E:/mtg-jamendo/",
+        "output_dir": "E:/mtg-melspec/",
+        "pool_size": 10,
+        "cutoff_size": 10000
+    },
+    "hpcp": {
+        "mp3_dir": "E:/mtg-jamendo/",
+        "output_dir": "E:/mtg-melspec/",
+        "pool_size": 1,
+        "cutoff_size": 5000
+    }
+}
