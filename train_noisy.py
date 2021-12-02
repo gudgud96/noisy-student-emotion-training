@@ -2,24 +2,32 @@ import torch
 from torch import nn
 from models import NoisyHPCPModel, HPCPModelv2
 import numpy as np
-from data_loader import get_audio_loader, get_audio_loader_augment
+from data_loader import get_audio_loader, get_audio_loader_augment, get_audio_loader_augment_full, get_audio_loader_full
 import datetime
 from sklearn import metrics
 from torch.optim.lr_scheduler import ExponentialLR
 import time
+import argparse
 
+parser = argparse.ArgumentParser()
+parser.add_argument("-l", "--input_length", type=str, required=True,
+                help="choose among 'long', 'short'")
+args = parser.parse_args()
+
+# load model
 model = NoisyHPCPModel(128, 12, 256, 56, 19, prob=0.95, n_layers=7).cuda()
 model.train()
 
 pretrained_model = HPCPModelv2(128, 12, 256, 56).cuda()
 pretrained_model.eval()
-pretrained_model_name = "melspec-10-normed-randaugment-v6-gem-combined-tag-pr.pth"
+pretrained_model_name = "models/melspec-10-normed-randaugment-v6-gem-combined-tag-pr.pth"
 S = torch.load(pretrained_model_name)
 pretrained_model.load_state_dict(S)
 
 UPPER_THRESHOLD = 0.1
 LOWER_THRESHOLD = 1E-6
 
+# load dataset
 path = 'tag_list.npy'
 tag_list = np.load(path)
 tag_list = tag_list[127:]
@@ -28,25 +36,47 @@ config_split = "0"
 roc_auc_fn = 'roc_auc_'+config_subset+'_'+config_split+'.npy'
 pr_auc_fn = 'pr_auc_'+config_subset+'_'+config_split+'.npy'
 
-
-train_dl = get_audio_loader_augment(root="E://mtg-jamendo-melspec-10//",
-                                    subset="moodtheme",
-                                    batch_size=16,
-                                    tr_val='train', 
-                                    split=0)
-val_dl = get_audio_loader(root="E://mtg-jamendo-melspec-10//",
-                          subset="moodtheme",
-                          batch_size=16,
-                          tr_val='validation', 
-                          split=0)
+if args.input_length == "short":
+    train_dl = get_audio_loader_augment(root="E://mtg-jamendo-melspec-10//",
+                                        subset="moodtheme",
+                                        batch_size=16,
+                                        tr_val='train', 
+                                        split=0,
+                                        is_hpcp=True)
+    val_dl = get_audio_loader(root="E://mtg-jamendo-melspec-10//",
+                                subset="moodtheme",
+                                batch_size=16,
+                                tr_val='validation', 
+                                split=0,
+                                is_hpcp=True)
+else:
+    train_dl = get_audio_loader_augment_full(root="E://mtg-jamendo-melspec-10//",
+                                             subset="moodtheme",
+                                             batch_size=8,
+                                             tr_val='train', 
+                                             split=0,
+                                             is_hpcp=True)
+    val_dl = get_audio_loader_full(root="E://mtg-jamendo-melspec-10//",
+                                   subset="moodtheme",
+                                   batch_size=8,
+                                   tr_val='validation', 
+                                   split=0,
+                                   is_hpcp=True)
 
 print('train_dl: {} val_dl: {} '.format(len(train_dl), len(val_dl)))
 
-full_train_dl = get_audio_loader_augment(root="E://mtg-jamendo-melspec-10//",
-                                         subset="all",
-                                         batch_size=16,
-                                         tr_val='train', 
-                                         split=0)
+if args.input_length == "short":
+    full_train_dl = get_audio_loader_augment(root="E://mtg-jamendo-melspec-10//",
+                                             subset="all",
+                                             batch_size=16,
+                                             tr_val='train', 
+                                             split=0)
+else:
+    full_train_dl = get_audio_loader_augment_full(root="E://mtg-jamendo-melspec-10//",
+                                                  subset="all",
+                                                  batch_size=16,
+                                                  tr_val='train', 
+                                                  split=0)
 
 
 print('full_train_dl: {}'.format(len(full_train_dl)))

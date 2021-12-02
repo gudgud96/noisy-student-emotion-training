@@ -15,15 +15,15 @@ def test(model_mode):
     # load model
     if model_mode == "normal":
         model = SingleModel(128, 256, 56).cuda()
-        model_name = "short-chunk-single-v1--roc.pth"
+        model_name = "short-normal.pth"
         
     elif model_mode == "hpcp":
         model = HPCPModel(128, 12, 256, 56).cuda()
-        model_name = "short-chunk-mel-hpcp-v1.pth"
+        model_name = "short-hpcp.pth"
 
     else:
         model = NoisyHPCPModel(128, 12, 256, 56, prob=1, n_layers=6).cuda()
-        model_name = "noisy-short-chunk-mel-hpcp-v1.pth"
+        model_name = "short-hpcp-noisy.pth"
 
     model.eval()
     S = torch.load(model_name)

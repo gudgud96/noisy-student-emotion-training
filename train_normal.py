@@ -2,14 +2,22 @@ import torch
 from torch import nn
 from models import SingleModel
 import numpy as np
-from data_loader import get_audio_loader_full, get_audio_loader_augment_full
+from data_loader import get_audio_loader_augment, get_audio_loader, get_audio_loader_full, get_audio_loader_augment_full
 import datetime
 from sklearn import metrics
 import time
 from torch.optim.lr_scheduler import ReduceLROnPlateau
+import argparse
 
+parser = argparse.ArgumentParser()
+parser.add_argument("-l", "--input_length", type=str, required=True,
+                help="choose among 'long', 'short'")
+args = parser.parse_args()
+
+# load model
 model = SingleModel(128, 256, 56).cuda()
 
+# load dataset
 path = 'tag_list.npy'
 tag_list = np.load(path)
 tag_list = tag_list[127:]
@@ -18,19 +26,32 @@ config_split = "0"
 roc_auc_fn = 'roc_auc_'+config_subset+'_'+config_split+'.npy'
 pr_auc_fn = 'pr_auc_'+config_subset+'_'+config_split+'.npy'
 
-
-train_dl = get_audio_loader_augment_full(root="E://mtg-jamendo-melspec-10//",
+if args.input_length == "short":
+    train_dl = get_audio_loader_augment(root="E://mtg-jamendo-melspec-10//",
                                         subset="moodtheme",
-                                        batch_size=8,
+                                        batch_size=16,
                                         tr_val='train', 
                                         split=0,
                                         is_hpcp=True)
-val_dl = get_audio_loader_full(root="E://mtg-jamendo-melspec-10//",
-                            subset="moodtheme",
-                            batch_size=8,
-                            tr_val='validation', 
-                            split=0,
-                            is_hpcp=True)
+    val_dl = get_audio_loader(root="E://mtg-jamendo-melspec-10//",
+                                subset="moodtheme",
+                                batch_size=16,
+                                tr_val='validation', 
+                                split=0,
+                                is_hpcp=True)
+else:
+    train_dl = get_audio_loader_augment_full(root="E://mtg-jamendo-melspec-10//",
+                                                subset="moodtheme",
+                                                batch_size=8,
+                                                tr_val='train', 
+                                                split=0,
+                                                is_hpcp=True)
+    val_dl = get_audio_loader_full(root="E://mtg-jamendo-melspec-10//",
+                                    subset="moodtheme",
+                                    batch_size=8,
+                                    tr_val='validation', 
+                                    split=0,
+                                    is_hpcp=True)
 
 # pre-train an oracle
 n_epochs = 100

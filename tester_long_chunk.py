@@ -15,15 +15,15 @@ def test(model_mode):
     # load model
     if model_mode == "normal":
         model = SingleModel(128, 256, 56).cuda()
-        model_name = "long-chunk-normal-v4.pth"
+        model_name = "long-normal.pth"
         
     elif model_mode == "hpcp":
         model = HPCPModelv2(128, 12, 256, 56).cuda()
-        model_name = "melspec-10-normed-randaugment-v6-gem-combined-tag-pr.pth"
+        model_name = "long-hpcp.pth"
 
     else:
         model = NoisyHPCPModelv2(128, 12, 256, 56, prob=1, n_layers=6).cuda()
-        model_name = "melspec-10-noisy-combined-unlabelled-roc-v4.pth"
+        model_name = "long-hpcp-noisy.pth"
 
     model.eval()
 
